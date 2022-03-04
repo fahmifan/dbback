@@ -8,6 +8,8 @@ import (
 
 	"github.com/fahmifan/dbback/pkg/backuper"
 	"github.com/fahmifan/dbback/pkg/config"
+	"github.com/fahmifan/dbback/pkg/model"
+	"github.com/fahmifan/dbback/pkg/worker"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -24,16 +26,37 @@ func main() {
 	}
 }
 
+const menu = `
+backupper is cli to backup db, currently support mysql & postgres
+
+backupper [options]
+
+options:
+	--help		show the help menu
+	--dbaname	the database name
+	--driver 	the database driver [mysql, postgres]
+	--cron		run as cron job
+`
+
 func run(args []string) error {
+	if len(args) <= 1 || (len(args) > 1 && args[1] == "--help") {
+		fmt.Print(menu)
+		return nil
+	}
+
 	cmd := flag.NewFlagSet(args[0], flag.ExitOnError)
 	var (
+		bak model.Backupper
+
 		outputPath string
 		dbName     string
 		dbDriver   string
+		isCron     bool
 	)
 
 	cmd.StringVar(&dbName, "dbname", "", `--dbname foobar`)
 	cmd.StringVar(&dbDriver, "driver", "", `--driver [mysql, c, postgres]`)
+	cmd.BoolVar(&isCron, "cron", false, `--cron [true, false]`)
 
 	if err := cmd.Parse(args[1:]); err != nil {
 		return fmt.Errorf("parse args: %w", err)
@@ -48,7 +71,7 @@ func run(args []string) error {
 	default:
 		return errors.New("invalid driver, should be [mysql, postgres]")
 	case "postgres":
-		bak := backuper.NewPostgre(&backuper.PostgreCfg{
+		bak = backuper.NewPostgre(&backuper.PostgreCfg{
 			OutDir:   cfg.OutDir,
 			User:     cfg.Postgres.User,
 			Password: cfg.Postgres.Password,
@@ -56,9 +79,8 @@ func run(args []string) error {
 			Port:     cfg.Postgres.Port,
 			DBName:   dbName,
 		})
-		outputPath, err = bak.Backup()
 	case "mysql":
-		bak := backuper.NewMySQL(&backuper.MySQLCfg{
+		bak = backuper.NewMySQL(&backuper.MySQLCfg{
 			OutDir:   cfg.OutDir,
 			User:     cfg.MySQL.User,
 			Password: cfg.MySQL.Password,
@@ -66,12 +88,22 @@ func run(args []string) error {
 			Port:     cfg.MySQL.Port,
 			DBName:   dbName,
 		})
-		outputPath, err = bak.Backup()
-	}
-	if err != nil {
-		return fmt.Errorf("backup :%w", err)
 	}
 
-	log.Info().Msgf("success backup to %s", outputPath)
+	if !isCron {
+		outputPath, err = bak.Backup()
+		if err != nil {
+			return fmt.Errorf("backup :%w", err)
+		}
+
+		log.Info().Msgf("success backup to %s", outputPath)
+		return nil
+	}
+
+	wrk := worker.New(bak)
+	if err = wrk.Run(); err != nil {
+		return err
+	}
+
 	return nil
 }
