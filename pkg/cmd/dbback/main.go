@@ -48,7 +48,15 @@ func run(args []string) error {
 	default:
 		return errors.New("invalid driver, should be [mysql, postgres]")
 	case "postgres":
-		return errors.New("not implemented")
+		bak := backuper.NewPostgre(&backuper.PostgreCfg{
+			OutDir:   cfg.OutDir,
+			User:     cfg.Postgres.User,
+			Password: cfg.Postgres.Password,
+			Host:     cfg.Postgres.Host,
+			Port:     cfg.Postgres.Port,
+			DBName:   dbName,
+		})
+		outputPath, err = bak.Backup()
 	case "mysql":
 		bak := backuper.NewMySQL(&backuper.MySQLCfg{
 			OutDir:   cfg.OutDir,
@@ -60,10 +68,8 @@ func run(args []string) error {
 		})
 		outputPath, err = bak.Backup()
 	}
-
 	if err != nil {
-		log.Err(err).Msg("backup")
-		os.Exit(1)
+		return fmt.Errorf("backup :%w", err)
 	}
 
 	log.Info().Msgf("success backup to %s", outputPath)
