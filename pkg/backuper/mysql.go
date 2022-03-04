@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gosimple/slug"
-	"github.com/rs/zerolog/log"
 )
 
 const dateLayout = "2006-01-02"
@@ -59,7 +58,6 @@ func (m *MySQL) Backup() (outpath string, err error) {
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
-	log.Debug().Str("cmd", cmd.String()).Msg("")
 	if err = cmd.Run(); err != nil {
 		err = fmt.Errorf("run cmd: %s: %w", stderr.String(), err)
 		return
