@@ -15,10 +15,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const mysqldumpBin = "mysqldump"
 const dateLayout = "2006-01-02"
 
 type MySQLCfg struct {
+	Host     string
+	Port     int
 	User     string
 	DBName   string
 	Password string
@@ -34,14 +35,20 @@ func NewMySQL(cfg *MySQLCfg) *MySQL {
 }
 
 func (m *MySQL) command() []string {
-	cmd := fmt.Sprintf(`mysqldump -u %s -p%s --databases %s`, m.cfg.User, m.cfg.Password, m.cfg.DBName)
+	cmd := fmt.Sprintf(
+		`mysqldump --host %s --port %d --protocol tcp --skip-column-statistics -u %s -p%s --databases %s`,
+		m.cfg.Host,
+		m.cfg.Port,
+		m.cfg.User,
+		m.cfg.Password,
+		m.cfg.DBName)
 	return strings.Split(cmd, " ")
 }
 
 // Backup backup to git repo
 func (m *MySQL) Backup() (outpath string, err error) {
 	date := time.Now().Format(dateLayout)
-	filename := fmt.Sprintf("%s-%s.postgres.gz", slug.Make(m.cfg.DBName), date)
+	filename := fmt.Sprintf("%s-%s.mysql.sql.gz", slug.Make(m.cfg.DBName), date)
 	outpath = path.Join(m.cfg.OutDir, filename)
 
 	cmdArgs := m.command()
@@ -55,35 +62,6 @@ func (m *MySQL) Backup() (outpath string, err error) {
 	log.Debug().Str("cmd", cmd.String()).Msg("")
 	if err = cmd.Run(); err != nil {
 		err = fmt.Errorf("run cmd: %s: %w", stderr.String(), err)
-		return
-	}
-
-	err = writeBackup(stdout, outpath)
-	if err != nil {
-		return "", fmt.Errorf("save dump to file: %w", err)
-	}
-
-	return
-}
-
-// DockerBackup expect bash shell
-func (m *MySQL) DockerBackup(containerID string) (outpath string, err error) {
-	date := time.Now().Format(dateLayout)
-	filename := fmt.Sprintf("%s-%s.mysql.sql.gz", slug.Make(m.cfg.DBName), date)
-	outpath = path.Join(m.cfg.OutDir, filename)
-
-	cmd := exec.Command("docker", "exec", "-i", containerID)
-	cmd.Args = append(cmd.Args, m.command()...)
-
-	stdout := bytes.NewBuffer(nil)
-	stderr := bytes.NewBuffer(nil)
-
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-
-	log.Debug().Str("cmd", cmd.String()).Msg("")
-	if err = cmd.Run(); err != nil {
-		err = fmt.Errorf("%s: %w", stderr.String(), err)
 		return
 	}
 

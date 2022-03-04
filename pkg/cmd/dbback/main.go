@@ -46,22 +46,16 @@ func run(args []string) error {
 
 	switch dbDriver {
 	default:
-		return errors.New("invalid driver, should be [mysql, mysql-docker, postgres]")
+		return errors.New("invalid driver, should be [mysql, postgres]")
 	case "postgres":
 		return errors.New("not implemented")
-	case "mysql-docker":
-		bak := backuper.NewMySQL(&backuper.MySQLCfg{
-			OutDir:   cfg.OutDir,
-			User:     cfg.MySQL.User,
-			Password: cfg.MySQL.Password,
-			DBName:   dbName,
-		})
-		outputPath, err = bak.DockerBackup("mysql")
 	case "mysql":
 		bak := backuper.NewMySQL(&backuper.MySQLCfg{
 			OutDir:   cfg.OutDir,
 			User:     cfg.MySQL.User,
 			Password: cfg.MySQL.Password,
+			Host:     cfg.MySQL.Host,
+			Port:     cfg.MySQL.Port,
 			DBName:   dbName,
 		})
 		outputPath, err = bak.Backup()
