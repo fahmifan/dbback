@@ -13,10 +13,18 @@ type DB struct {
 	Password string `json:"password"`
 }
 
+type AliOSS struct {
+	Bucket          string `json:"bucket"`
+	Endpoint        string `json:"endpoint"`
+	AccessKeyID     string `json:"accessKeyID"`
+	AccessKeySecret string `json:"accessKeySecret"`
+}
+
 type Config struct {
 	OutDir   string `json:"outDir"`
 	Postgres DB     `json:"postgres"`
 	MySQL    DB     `json:"mysql"`
+	AliOSS   AliOSS `json:"aliOSS"`
 }
 
 func Load(cfgPath string) (Config, error) {

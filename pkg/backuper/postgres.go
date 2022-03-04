@@ -11,13 +11,18 @@ import (
 	"github.com/gosimple/slug"
 )
 
-type PostgreCfg struct {
+type DBCfg struct {
 	Host     string
 	Port     int
 	User     string
 	DBName   string
 	Password string
 	OutDir   string
+}
+
+type PostgreCfg struct {
+	DBCfg
+	AliOSS *AlibabaOSS
 }
 
 type Postgre struct {
@@ -62,6 +67,11 @@ func (p *Postgre) Backup() (outpath string, err error) {
 	err = writeBackup(stdout, outpath)
 	if err != nil {
 		return "", fmt.Errorf("save dump to file: %w", err)
+	}
+
+	err = p.cfg.AliOSS.UploadFromPath(outpath, filename)
+	if err != nil {
+		return "", fmt.Errorf("postgre backup: upload to alioss: %w", err)
 	}
 
 	return

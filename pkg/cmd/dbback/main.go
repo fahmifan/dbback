@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/fahmifan/dbback/pkg/backuper"
 	"github.com/fahmifan/dbback/pkg/config"
 	"github.com/fahmifan/dbback/pkg/model"
@@ -56,7 +57,7 @@ func run(args []string) error {
 
 	cmd.StringVar(&dbName, "dbname", "", `--dbname foobar`)
 	cmd.StringVar(&dbDriver, "driver", "", `--driver [mysql, c, postgres]`)
-	cmd.BoolVar(&isCron, "cron", false, `--cron [true, false]`)
+	cmd.BoolVar(&isCron, "cron", false, `--cron [true, false] default false`)
 
 	if err := cmd.Parse(args[1:]); err != nil {
 		return fmt.Errorf("parse args: %w", err)
@@ -67,26 +68,42 @@ func run(args []string) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
+	ossClient, err := oss.New(cfg.AliOSS.Endpoint, cfg.AliOSS.AccessKeyID, cfg.AliOSS.AccessKeySecret)
+	if err != nil {
+		return fmt.Errorf("new oss: %w", err)
+	}
+
+	aliOss := backuper.NewAlibabaOSS(&backuper.AlibabaOSSCfg{
+		Client: ossClient,
+		Bucket: cfg.AliOSS.Bucket,
+	})
+
 	switch dbDriver {
 	default:
 		return errors.New("invalid driver, should be [mysql, postgres]")
 	case "postgres":
 		bak = backuper.NewPostgre(&backuper.PostgreCfg{
-			OutDir:   cfg.OutDir,
-			User:     cfg.Postgres.User,
-			Password: cfg.Postgres.Password,
-			Host:     cfg.Postgres.Host,
-			Port:     cfg.Postgres.Port,
-			DBName:   dbName,
+			AliOSS: aliOss,
+			DBCfg: backuper.DBCfg{
+				OutDir:   cfg.OutDir,
+				User:     cfg.Postgres.User,
+				Password: cfg.Postgres.Password,
+				Host:     cfg.Postgres.Host,
+				Port:     cfg.Postgres.Port,
+				DBName:   dbName,
+			},
 		})
 	case "mysql":
 		bak = backuper.NewMySQL(&backuper.MySQLCfg{
-			OutDir:   cfg.OutDir,
-			User:     cfg.MySQL.User,
-			Password: cfg.MySQL.Password,
-			Host:     cfg.MySQL.Host,
-			Port:     cfg.MySQL.Port,
-			DBName:   dbName,
+			AliOSS: aliOss,
+			DBCfg: backuper.DBCfg{
+				OutDir:   cfg.OutDir,
+				User:     cfg.MySQL.User,
+				Password: cfg.MySQL.Password,
+				Host:     cfg.MySQL.Host,
+				Port:     cfg.MySQL.Port,
+				DBName:   dbName,
+			},
 		})
 	}
 

@@ -17,12 +17,8 @@ import (
 const dateLayout = "2006-01-02"
 
 type MySQLCfg struct {
-	Host     string
-	Port     int
-	User     string
-	DBName   string
-	Password string
-	OutDir   string
+	DBCfg
+	AliOSS *AlibabaOSS
 }
 
 type MySQL struct {
@@ -66,6 +62,11 @@ func (m *MySQL) Backup() (outpath string, err error) {
 	err = writeBackup(stdout, outpath)
 	if err != nil {
 		return "", fmt.Errorf("save dump to file: %w", err)
+	}
+
+	err = m.cfg.AliOSS.UploadFromPath(outpath, filename)
+	if err != nil {
+		return "", fmt.Errorf("mysql backup: upload to alioss: %w", err)
 	}
 
 	return
