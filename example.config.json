@@ -1,0 +1,11 @@
+{
+    "outDir": "backup",
+    "mysql": {
+        "user": "foo",
+        "password": "bar"
+    },
+    "postgres": {
+        "user": "foo",
+        "password": "bar"
+    }
+}
