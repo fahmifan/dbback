@@ -22,9 +22,10 @@ func NewMySQL(cfg *MySQLCfg) *MySQL {
 	return &MySQL{cfg: cfg}
 }
 
+// should use mysqldump Ver 10.19 Distrib 10.3.34-MariaDB
 func (m *MySQL) command() (cmdBin string, args []string) {
 	cmd := fmt.Sprintf(
-		`mysqldump --host %s --port %d --protocol tcp --skip-column-statistics -u %s -p%s --databases %s`,
+		`mysqldump --host %s --port %d --protocol tcp -u %s -p%s --databases %s`,
 		m.cfg.Host,
 		m.cfg.Port,
 		m.cfg.User,
