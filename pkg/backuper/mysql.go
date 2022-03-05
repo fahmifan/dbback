@@ -35,15 +35,15 @@ func (m *MySQL) command() (cmdBin string, args []string) {
 }
 
 // Backup backup to git repo
-func (m *MySQL) Backup() (outpath string, err error) {
+func (m *MySQL) Backup() (_ string, err error) {
 	date := time.Now()
 	ext := "mysql.sql.gz"
 	filename := fmt.Sprintf("%s.%s", m.cfg.DBName, ext)
 	rotateTag := makeRotateTag(m.cfg.MaxRotate, date, filename)
 	cmdBin, cmdArgs := m.command()
 
-	up := uploader{
-		aliOSS:    m.cfg.AliOSS,
+	up := backuper{
+		oss:       m.cfg.AliOSS,
 		date:      date,
 		objKey:    rotateTag,
 		cmdBin:    cmdBin,
@@ -51,5 +51,5 @@ func (m *MySQL) Backup() (outpath string, err error) {
 		maxRotate: m.cfg.MaxRotate,
 	}
 
-	return rotateTag, up.upload()
+	return rotateTag, up.backup()
 }

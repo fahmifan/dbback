@@ -3,12 +3,17 @@ package backuper
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"time"
 )
 
-type uploader struct {
-	aliOSS    *AlibabaOSS
+type ObjectStorageService interface {
+	Upload(key string, rd io.Reader) error
+}
+
+type backuper struct {
+	oss       ObjectStorageService
 	date      time.Time
 	objKey    string
 	cmdBin    string
@@ -17,7 +22,8 @@ type uploader struct {
 	env       []string
 }
 
-func (u *uploader) upload() error {
+// run backup command and upload to object storage service
+func (u *backuper) backup() error {
 	cmd := exec.Command(u.cmdBin, u.cmdArgs...)
 	dbDump := bytes.NewBuffer(nil)
 	stderr := bytes.NewBuffer(nil)
@@ -37,7 +43,7 @@ func (u *uploader) upload() error {
 		return fmt.Errorf("gzip dump: %w", err)
 	}
 
-	err = u.aliOSS.Upload(u.objKey, gz)
+	err = u.oss.Upload(u.objKey, gz)
 	if err != nil {
 		return fmt.Errorf("upload to alioss: %w", err)
 	}

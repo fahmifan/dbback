@@ -41,7 +41,7 @@ func (p *Postgre) command() (cmdBin string, args []string) {
 }
 
 // Backup backup postgres db to S3 compatible object storage
-func (p *Postgre) Backup() (outpath string, err error) {
+func (p *Postgre) Backup() (_ string, err error) {
 	date := time.Now()
 	filename := p.cfg.DBName + ".pg.sql.gz"
 	rotateTag := makeRotateTag(p.cfg.MaxRotate, date, filename)
@@ -53,8 +53,8 @@ func (p *Postgre) Backup() (outpath string, err error) {
 	}
 	cmdBin, cmdArgs := p.command()
 
-	up := uploader{
-		aliOSS:    p.cfg.AliOSS,
+	up := backuper{
+		oss:       p.cfg.AliOSS,
 		date:      date,
 		objKey:    rotateTag,
 		cmdBin:    cmdBin,
@@ -63,5 +63,5 @@ func (p *Postgre) Backup() (outpath string, err error) {
 		env:       env,
 	}
 
-	return rotateTag, up.upload()
+	return rotateTag, up.backup()
 }
