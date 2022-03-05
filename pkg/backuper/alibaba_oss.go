@@ -2,6 +2,7 @@ package backuper
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
@@ -19,15 +20,15 @@ func NewAlibabaOSS(cfg *AlibabaOSSCfg) *AlibabaOSS {
 	return &AlibabaOSS{cfg: cfg}
 }
 
-func (a *AlibabaOSS) UploadFromPath(srcPath, fileName string) error {
+func (a *AlibabaOSS) Upload(key string, rd io.Reader) error {
 	bucket, err := a.cfg.Client.Bucket(a.cfg.Bucket)
 	if err != nil {
-		return fmt.Errorf("get bucket (%s): %w", a.cfg.Bucket, err)
+		return fmt.Errorf("UploadFromPath: get bucket (%s): %w", a.cfg.Bucket, err)
 	}
 
-	err = bucket.PutObjectFromFile(srcPath, fileName)
+	err = bucket.PutObject(key, rd)
 	if err != nil {
-		return fmt.Errorf("put object (srcPath:%s fileName:%s) : %w", srcPath, fileName, err)
+		return fmt.Errorf("UploadFromPath: put object (key: %s) : %w", key, err)
 	}
 
 	return nil

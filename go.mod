@@ -10,6 +10,7 @@ require (
 require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.1+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/fahmifan/lrucache v0.0.0-20211031015515-79cf4d02894c // indirect
 	github.com/go-co-op/gocron v1.13.0 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
@@ -33,3 +34,5 @@ require (
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
+
+replace github.com/fahmifan/lrucache => /home/miun/personal/github.com/fahmifan/lrucache

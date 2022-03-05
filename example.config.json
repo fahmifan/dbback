@@ -11,5 +11,11 @@
         "port": 5432,
         "user": "foo",
         "password": "bar"
+    },
+    "aliOSS": {
+        "bucket": "",
+        "endpoint": "",
+        "accessKeyID": "",
+        "accessKeySecret": ""
     }
 }
