@@ -21,6 +21,7 @@ type AliOSS struct {
 }
 
 type Config struct {
+	CronTab  string `json:"cronTab"`
 	OutDir   string `json:"outDir"`
 	Postgres DB     `json:"postgres"`
 	MySQL    DB     `json:"mysql"`

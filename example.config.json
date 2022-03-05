@@ -1,4 +1,5 @@
 {
+    "cronTab": "0 0 * * *",
     "outDir": "backup",
     "mysql": {
         "host": "localhost",

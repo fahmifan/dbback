@@ -8,16 +8,38 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// at every 00:00
+const defaultCronTab = "0 0 * * *"
+
 type Worker struct {
 	cronScheduler *gocron.Scheduler
 	backuper      model.Backupper
+	cronTab       string
 }
 
-func New(backuper model.Backupper) *Worker {
-	return &Worker{
+type opt func(w *Worker)
+
+func WithCronTab(cronTab string) opt {
+	return func(w *Worker) {
+		if cronTab == "" {
+			cronTab = defaultCronTab
+		}
+		w.cronTab = cronTab
+	}
+}
+
+func New(backuper model.Backupper, opts ...opt) *Worker {
+	wrk := &Worker{
 		backuper:      backuper,
 		cronScheduler: gocron.NewScheduler(time.Local),
+		cronTab:       defaultCronTab,
 	}
+
+	for _, opt := range opts {
+		opt(wrk)
+	}
+
+	return wrk
 }
 
 func (w *Worker) Run() error {
@@ -29,7 +51,7 @@ func (w *Worker) Run() error {
 }
 
 func (w *Worker) registerPeriodicBackup() error {
-	_, err := w.cronScheduler.Every(1).Day().At("00:00").Do(func() {
+	_, err := w.cronScheduler.Cron(w.cronTab).Do(func() {
 		outputPath, err := w.backuper.Backup()
 		if err != nil {
 			log.Error().Err(err).Msg("periodic")

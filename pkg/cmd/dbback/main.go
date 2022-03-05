@@ -68,7 +68,7 @@ func run(args []string) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	ossClient, err := oss.New(cfg.AliOSS.Endpoint, cfg.AliOSS.AccessKeyID, cfg.AliOSS.AccessKeySecret)
+	ossClient, err := oss.New(cfg.AliOSS.Endpoint, cfg.AliOSS.AccessKeyID, cfg.AliOSS.AccessKeySecret, oss.Timeout(10, 30))
 	if err != nil {
 		return fmt.Errorf("new oss: %w", err)
 	}
@@ -117,7 +117,7 @@ func run(args []string) error {
 		return nil
 	}
 
-	wrk := worker.New(bak)
+	wrk := worker.New(bak, worker.WithCronTab(cfg.CronTab))
 	if err = wrk.Run(); err != nil {
 		return err
 	}
