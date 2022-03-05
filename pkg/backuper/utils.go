@@ -4,19 +4,8 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"os"
 	"time"
 )
-
-func writeBackup(src io.Reader, outPath string) error {
-	outFile, err := os.Create(outPath)
-	if err != nil {
-		return fmt.Errorf("create output: %w", err)
-	}
-	defer outFile.Close()
-
-	return writeGzip(src, outFile)
-}
 
 func writeGzip(src io.Reader, dst io.Writer) error {
 	gz, err := gzip.NewWriterLevel(dst, gzip.DefaultCompression)

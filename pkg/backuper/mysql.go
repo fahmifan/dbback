@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-const dateLayout = "2006-01-02"
-
 type MySQLCfg struct {
 	DBCfg
 	AliOSS *AlibabaOSS
@@ -18,6 +16,9 @@ type MySQL struct {
 }
 
 func NewMySQL(cfg *MySQLCfg) *MySQL {
+	if cfg.MaxRotate <= 0 {
+		cfg.MaxRotate = defaultMaxRotate
+	}
 	return &MySQL{cfg: cfg}
 }
 
